@@ -50,6 +50,7 @@ interface GameViewModel {
 class GameVM(
     private val userPreferencesRepository: UserPreferencesRepository
 ): GameViewModel, ViewModel() {
+
     private val _gameState = MutableStateFlow(GameState())
     override val gameState: StateFlow<GameState>
         get() = _gameState.asStateFlow()
@@ -63,13 +64,19 @@ class GameVM(
         get() = _highscore
 
     // nBack is currently hardcoded
-    override val nBack: Int = 2
+    override val nBack: Int
+        get() = 2
 
     private var job: Job? = null  // coroutine job for the game event
     private val eventInterval: Long = 2000L  // 2000 ms (2s)
 
     private val nBackHelper = NBackHelper()  // Helper that generate the event array
     private var events = emptyArray<Int>()  // Array with all events
+
+    private val _events = MutableStateFlow(emptyList<Int>())
+    val eventsState: StateFlow<List<Int>>
+        get() = _events
+
 
     override fun setGameType(gameType: GameType) {
         // update the gametype in the gamestate
@@ -79,15 +86,18 @@ class GameVM(
     override fun startGame() {
         job?.cancel()  // Cancel any existing game loop
 
+        val generatedEvents = nBackHelper.generateNBackString(10, 9, 30, nBack).toList()
+        _events.value = generatedEvents
+
         // Get the events from our C-model (returns IntArray, so we need to convert to Array<Int>)
-        events = nBackHelper.generateNBackString(10, 9, 30, nBack).toList().toTypedArray()  // Todo Higher Grade: currently the size etc. are hardcoded, make these based on user input
+        events = nBackHelper.generateNBackString(10, 9, 30,nBack).toList().toTypedArray()  // Todo Higher Grade: currently the size etc. are hardcoded, make these based on user input
         Log.d("GameVM", "The following sequence was generated: ${events.contentToString()}")
 
         job = viewModelScope.launch {
             when (gameState.value.gameType) {
                 GameType.Audio -> runAudioGame()
                 GameType.AudioVisual -> runAudioVisualGame()
-                GameType.Visual -> runVisualGame(events)
+                GameType.Visual -> runVisualGame(events, nBack)
             }
             // Todo: update the highscore
         }

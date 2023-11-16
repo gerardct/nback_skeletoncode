@@ -26,6 +26,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +45,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import mobappdev.example.nback_cimpl.ui.viewmodels.FakeVM
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameViewModel
+import kotlinx.coroutines.delay
+
 
 
 @Composable
@@ -57,6 +60,7 @@ fun GameScreen(
     val nback = vm.nBack
 
     val gameState by vm.gameState.collectAsState()
+    val events by vm.gameState.value.eventValue.
 
     // Call the runVisualGame function when the GameScreen is created or based on some trigger
     LaunchedEffect(key1 = Unit) {
@@ -106,7 +110,7 @@ fun GameScreen(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                GridContainer(vm.events)
+                GridContainer(events)
             }
             Row (
                 modifier = Modifier
@@ -134,11 +138,23 @@ fun GameScreen(
 }
 @Composable
 fun GridContainer(stimuliIndices: List<Int>) {
-    var cells by remember { mutableStateOf(List(9) { index ->
-                val cellColor = if (index in stimuliIndices) Color.Green else Color.LightGray
-                CellData(index, cellColor)
+    val totalCells = 9
+
+    var cells by remember { mutableStateOf(List(totalCells) { index ->
+        CellData(index, if (index in stimuliIndices) Color.Green else Color.LightGray)
+    }) }
+
+    LaunchedEffect(stimuliIndices) {
+        // Change specified cells to green and revert to original color after a delay
+        stimuliIndices.forEach { index ->
+            cells = cells.toMutableList().also { updatedCells ->
+                updatedCells[index] = CellData(index, Color.Green)
             }
-        )
+            delay(1000) // Adjust delay time as needed
+            cells = cells.toMutableList().also { updatedCells ->
+                updatedCells[index] = CellData(index, Color.LightGray)
+            }
+        }
     }
 
     Box(
@@ -148,16 +164,13 @@ fun GridContainer(stimuliIndices: List<Int>) {
             .background(Color.White),
         contentAlignment = Alignment.Center
     ) {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            modifier = Modifier
-                .padding(4.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-            items(cells.size) { index ->
-                Cell(cellData = cells[index])
+        LazyVerticalGrid(GridCells.Fixed(3),
+            content = {
+                items(cells) { cellData ->
+                    Cell(cellData = cellData)
+                }
             }
-        }
+        )
     }
 }
 
