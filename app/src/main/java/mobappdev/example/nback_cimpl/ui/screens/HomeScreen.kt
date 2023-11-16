@@ -30,9 +30,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import mobappdev.example.nback_cimpl.R
 import mobappdev.example.nback_cimpl.ui.viewmodels.FakeVM
+import mobappdev.example.nback_cimpl.ui.viewmodels.GameState
+import mobappdev.example.nback_cimpl.ui.viewmodels.GameType
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameViewModel
 
 /**
@@ -93,11 +96,20 @@ fun HomeScreen(
                     }
                 }
             }
-            Text(
-                modifier = Modifier.padding(16.dp),
-                text = "Start Game".uppercase(),
-                style = MaterialTheme.typography.displaySmall
-            )
+            Button(onClick = {navController.navigate("GameScreen")
+                // Todo: change this button behaviour
+                scope.launch {
+                    snackBarHostState.showSnackbar(
+                        message = "STARTING GAME"
+                    )
+                }
+            }) {
+                Text(
+                    modifier = Modifier.padding(16.dp),
+                    text = "Start Game".uppercase(),
+                    style = MaterialTheme.typography.displaySmall)
+            }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -105,7 +117,7 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(onClick = {navController.navigate("GameScreen")
+                Button(onClick = {vm.setGameType(GameType.Audio)
                     // Todo: change this button behaviour
                     scope.launch {
                         snackBarHostState.showSnackbar(
@@ -122,7 +134,7 @@ fun HomeScreen(
                     )
                 }
                 Button(
-                    onClick = {
+                    onClick = {vm.setGameType(GameType.Visual)
                         // Todo: change this button behaviour
                         scope.launch {
                             snackBarHostState.showSnackbar(
@@ -149,6 +161,6 @@ fun HomeScreen(
 fun HomeScreenPreview() {
     // Since I am injecting a VM into my homescreen that depends on Application context, the preview doesn't work.
     Surface(){
-        HomeScreen(FakeVM())
+        HomeScreen(FakeVM(), navController = rememberNavController())
     }
 }
