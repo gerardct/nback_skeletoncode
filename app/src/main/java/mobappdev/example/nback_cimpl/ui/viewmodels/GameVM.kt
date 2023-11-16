@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import mobappdev.example.nback_cimpl.GameApplication
 import mobappdev.example.nback_cimpl.NBackHelper
 import mobappdev.example.nback_cimpl.data.UserPreferencesRepository
+import java.security.KeyStore.TrustedCertificateEntry
 
 /**
  * This is the GameViewModel.
@@ -102,14 +103,28 @@ class GameVM(
         // Todo: Make work for Basic grade
     }
 
-    private suspend fun runVisualGame(events: Array<Int>){
+    private suspend fun runVisualGame(events: Array<Int>, nBack: Int) {
         // Todo: Replace this code for actual game code
-        for (value in events) {
-            _gameState.value = _gameState.value.copy(eventValue = value)
+        for (index in nBack until events.size) {
+            val currentEvent = events[index]
+            val nBackEvent = events[index - nBack]
+
+            // Compare the current event with the one that occurred n steps back
+            // For example:
+            val match = currentEvent == nBackEvent // Implement your matching logic here
+
+            // Update the game state or perform actions based on the match
+            // For example:
+            _gameState.value = _gameState.value.copy(
+                eventValue = currentEvent,
+                isMatch = match // Update the isMatch property in GameState based on the comparison
+            )
+
+            // Add a delay between events if needed
             delay(eventInterval)
         }
-
     }
+
 
     private fun runAudioVisualGame(){
         // Todo: Make work for Higher grade
@@ -144,7 +159,8 @@ enum class GameType{
 data class GameState(
     // You can use this state to push values from the VM to your UI.
     val gameType: GameType = GameType.Visual,  // Type of the game
-    val eventValue: Int = -1  // The value of the array string
+    val eventValue: Int = -1,  // The value of the array string
+    val isMatch: Boolean = false
 )
 
 class FakeVM: GameViewModel{

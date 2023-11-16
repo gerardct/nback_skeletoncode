@@ -10,12 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -23,30 +25,43 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.R
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import mobappdev.example.nback_cimpl.ui.viewmodels.FakeVM
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameViewModel
 
 
 @Composable
 fun GameScreen(
-    vm:GameViewModel)
+    vm:GameViewModel, navController: NavController)
 {
     val score = '0'
     val currentEvent = '1'
     val totalEvents = '3'
     val snackBarHostState = remember { SnackbarHostState() }
+    val nback = vm.nBack
+
+    val gameState by vm.gameState.collectAsState()
+
+    // Call the runVisualGame function when the GameScreen is created or based on some trigger
+    LaunchedEffect(key1 = Unit) {
+        vm.runVisualGame(eventsArray, nBack)
+    }
 
     Scaffold (
         snackbarHost = { SnackbarHost (snackBarHostState) }
@@ -58,20 +73,40 @@ fun GameScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ){
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(16.dp).fillMaxWidth()
+            ) {
+                // Button with left arrow icon
+                Button(
+                    onClick = { navController.navigate("HomeScreen")},
+                    modifier = Modifier.padding(end = 1.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = mobappdev.example.nback_cimpl.R.drawable.pngtree_vector_left_arrow_icon_png_image_927204), // Replace with your arrow icon
+                        contentDescription = "Arrow icon",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
             Text(
-                modifier = Modifier.padding(32.dp),
+                modifier = Modifier.padding(22.dp),
                 text = "Score = $score",
                 style = MaterialTheme.typography.headlineLarge
             )
             Spacer(modifier = Modifier.height(20.dp))
-            Text(modifier = Modifier.padding(20.dp),
+            Text(modifier = Modifier.padding(2.dp),
                 text = "current event = $currentEvent/$totalEvents",
                 style = MaterialTheme.typography.headlineMedium)
+            Text(modifier = Modifier.padding(2.dp),
+                text = "N = $nback",
+                style = MaterialTheme.typography.headlineSmall)
             Box(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                GridContainer(listOf(1))
+                GridContainer(vm.events)
             }
             Row (
                 modifier = Modifier
@@ -154,6 +189,6 @@ data class CellData(val index: Int, val color: Color)
 @Composable
 fun GameScreenPreview() {
     // Since I am injecting a VM into my homescreen that depends on Application context, the preview doesn't work.
-    Surface() { GameScreen(FakeVM())}
+    Surface() { GameScreen(FakeVM(), navController = rememberNavController())}
 }
 

@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("GameScreen") {
                             // Instantiate the viewmodel
-                            GameScreen(vm = gameViewModel)
+                            GameScreen(vm = gameViewModel, navController = navController)
                         }
                     }
                 }

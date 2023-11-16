@@ -97,6 +97,7 @@ fun HomeScreen(
                 }
             }
             Button(onClick = {navController.navigate("GameScreen")
+                vm::startGame
                 // Todo: change this button behaviour
                 scope.launch {
                     snackBarHostState.showSnackbar(
