@@ -96,15 +96,20 @@ fun HomeScreen(
                     }
                 }
             }
-            Button(onClick = {navController.navigate("GameScreen")
-                vm::startGame
-                // Todo: change this button behaviour
-                scope.launch {
-                    snackBarHostState.showSnackbar(
-                        message = "STARTING GAME"
-                    )
+            Button(
+                onClick = {
+                    // Start the game when the button is clicked
+                    vm.startGame()
+                    // Navigate to the GameScreen
+                    navController.navigate("GameScreen")
+                    // Show a snackbar
+                    scope.launch {
+                        snackBarHostState.showSnackbar(
+                            message = "STARTING GAME"
+                        )
+                    }
                 }
-            }) {
+            ) {
                 Text(
                     modifier = Modifier.padding(16.dp),
                     text = "Start Game".uppercase(),

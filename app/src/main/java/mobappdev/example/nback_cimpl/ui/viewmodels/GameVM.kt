@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 import mobappdev.example.nback_cimpl.GameApplication
 import mobappdev.example.nback_cimpl.NBackHelper
 import mobappdev.example.nback_cimpl.data.UserPreferencesRepository
-import java.security.KeyStore.TrustedCertificateEntry
 
 /**
  * This is the GameViewModel.
@@ -74,8 +73,7 @@ class GameVM(
     private var events = emptyArray<Int>()  // Array with all events
 
     private val _events = MutableStateFlow(emptyList<Int>())
-    val eventsState: StateFlow<List<Int>>
-        get() = _events
+
 
 
     override fun setGameType(gameType: GameType) {
@@ -115,7 +113,8 @@ class GameVM(
 
     private suspend fun runVisualGame(events: Array<Int>, nBack: Int) {
         // Todo: Replace this code for actual game code
-        for (index in nBack until events.size) {
+        var index = 0
+        for (index in events[0] until events.size) {
             val currentEvent = events[index]
             val nBackEvent = events[index - nBack]
 
@@ -127,9 +126,10 @@ class GameVM(
             // For example:
             _gameState.value = _gameState.value.copy(
                 eventValue = currentEvent,
-                isMatch = match // Update the isMatch property in GameState based on the comparison
+                isMatch = match,
+                index = index,
+                size = (events.size -1)  // Update the isMatch property in GameState based on the comparison
             )
-
             // Add a delay between events if needed
             delay(eventInterval)
         }
@@ -170,7 +170,9 @@ data class GameState(
     // You can use this state to push values from the VM to your UI.
     val gameType: GameType = GameType.Visual,  // Type of the game
     val eventValue: Int = -1,  // The value of the array string
-    val isMatch: Boolean = false
+    val isMatch: Boolean = false,
+    val index: Int = 0,
+    val size: Int = 0
 )
 
 class FakeVM: GameViewModel{

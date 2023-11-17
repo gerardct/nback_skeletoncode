@@ -30,10 +30,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.R
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -46,7 +46,7 @@ import androidx.navigation.compose.rememberNavController
 import mobappdev.example.nback_cimpl.ui.viewmodels.FakeVM
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameViewModel
 import kotlinx.coroutines.delay
-
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -54,18 +54,12 @@ fun GameScreen(
     vm:GameViewModel, navController: NavController)
 {
     val score = '0'
-    val currentEvent = '1'
-    val totalEvents = '3'
     val snackBarHostState = remember { SnackbarHostState() }
     val nback = vm.nBack
-
     val gameState by vm.gameState.collectAsState()
-    val events by vm.gameState.value.eventValue.
-
+    val totalEvents = gameState.size
+    val nBackEvent = gameState.index // Assuming this property exists in GameState
     // Call the runVisualGame function when the GameScreen is created or based on some trigger
-    LaunchedEffect(key1 = Unit) {
-        vm.runVisualGame(eventsArray, nBack)
-    }
 
     Scaffold (
         snackbarHost = { SnackbarHost (snackBarHostState) }
@@ -101,7 +95,7 @@ fun GameScreen(
             )
             Spacer(modifier = Modifier.height(20.dp))
             Text(modifier = Modifier.padding(2.dp),
-                text = "current event = $currentEvent/$totalEvents",
+                text = "current event = ${nBackEvent}/${totalEvents}",
                 style = MaterialTheme.typography.headlineMedium)
             Text(modifier = Modifier.padding(2.dp),
                 text = "N = $nback",
@@ -110,7 +104,7 @@ fun GameScreen(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                GridContainer(events)
+                GridContainer(gameState.eventValue)
             }
             Row (
                 modifier = Modifier
@@ -137,22 +131,33 @@ fun GameScreen(
     }
 }
 @Composable
-fun GridContainer(stimuliIndices: List<Int>) {
+fun GridContainer(stimuliIndices: Int) {
     val totalCells = 9
 
     var cells by remember { mutableStateOf(List(totalCells) { index ->
-        CellData(index, if (index in stimuliIndices) Color.Green else Color.LightGray)
+        CellData(index, Color.LightGray)
     }) }
 
+    val scope = rememberCoroutineScope()
+
     LaunchedEffect(stimuliIndices) {
-        // Change specified cells to green and revert to original color after a delay
-        stimuliIndices.forEach { index ->
-            cells = cells.toMutableList().also { updatedCells ->
-                updatedCells[index] = CellData(index, Color.Green)
-            }
-            delay(1000) // Adjust delay time as needed
-            cells = cells.toMutableList().also { updatedCells ->
-                updatedCells[index] = CellData(index, Color.LightGray)
+        val highlightedCells = mutableSetOf<Int>()
+        highlightedCells += stimuliIndices
+
+        cells = cells.mapIndexed { index, cellData ->
+            if (index in highlightedCells) {
+                scope.launch {
+                    cells = cells.toMutableList().also { updatedCells ->
+                        updatedCells[index] = CellData(index, Color.Green)
+                    }
+                    delay(2000) // Adjust delay time as needed
+                    cells = cells.toMutableList().also { updatedCells ->
+                        updatedCells[index] = CellData(index, Color.LightGray)
+                    }
+                }
+                CellData(index, Color.Green)
+            } else {
+                cellData
             }
         }
     }
@@ -164,10 +169,11 @@ fun GridContainer(stimuliIndices: List<Int>) {
             .background(Color.White),
         contentAlignment = Alignment.Center
     ) {
-        LazyVerticalGrid(GridCells.Fixed(3),
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
             content = {
-                items(cells) { cellData ->
-                    Cell(cellData = cellData)
+                items(cells.size) { index ->
+                    Cell(cellData = cells[index])
                 }
             }
         )
@@ -202,6 +208,6 @@ data class CellData(val index: Int, val color: Color)
 @Composable
 fun GameScreenPreview() {
     // Since I am injecting a VM into my homescreen that depends on Application context, the preview doesn't work.
-    Surface() { GameScreen(FakeVM(), navController = rememberNavController())}
+    Surface { GameScreen(FakeVM(), navController = rememberNavController())}
 }
 
