@@ -1,14 +1,18 @@
 package mobappdev.example.nback_cimpl.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,12 +36,14 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mobappdev.example.nback_cimpl.R
 import mobappdev.example.nback_cimpl.ui.viewmodels.FakeVM
-import mobappdev.example.nback_cimpl.ui.viewmodels.GameState
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameType
+import mobappdev.example.nback_cimpl.ui.viewmodels.GameVM
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameViewModel
+import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 /**
  * This is the Home screen composable
@@ -52,6 +58,7 @@ import mobappdev.example.nback_cimpl.ui.viewmodels.GameViewModel
  *
  */
 
+@SuppressLint("FlowOperatorInvokedInComposition")
 @Composable
 fun HomeScreen(
     vm: GameViewModel, navController: NavController
@@ -60,6 +67,10 @@ fun HomeScreen(
     val gameState by vm.gameState.collectAsState()
     val snackBarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val gameType by vm.gameState.map { it.gameType }.collectAsState("")
+    val nback = vm.nBack
+
+
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) }
@@ -71,32 +82,33 @@ fun HomeScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Text(text = "N-Back game",
+                style = MaterialTheme.typography.headlineLarge
+            )
             Text(
                 modifier = Modifier.padding(32.dp),
                 text = "High-Score = $highscore",
-                style = MaterialTheme.typography.headlineLarge
+                style = MaterialTheme.typography.headlineMedium
             )
-            // Todo: You'll probably want to change this "BOX" part of the composable
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
+            Box(modifier = Modifier.padding(32.dp),
+                contentAlignment = Alignment.Center){
+                Column (
                     Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    if (gameState.eventValue != -1) {
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = "Current eventValue is: ${gameState.eventValue}",
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                    Button(onClick = vm::startGame) {
-                        Text(text = "Generate eventValues")
-                    }
+                ){
+                    Text(modifier = Modifier.padding(10.dp),
+                        text = "Settings",
+                        style = MaterialTheme.typography.headlineMedium)
+                    Spacer(modifier = Modifier.size(10.dp))
+                    Text(modifier = Modifier.padding(10.dp),
+                        text = "Game type = $gameType")
+                    Spacer(modifier = Modifier.size(10.dp))
+                    Text(modifier = Modifier.padding(10.dp),
+                        text = "N-back = $nback")
                 }
             }
+            // Todo: You'll probably want to change this "BOX" part of the composable
+
             Button(
                 onClick = {
                     // Show a snackbar first
@@ -105,12 +117,11 @@ fun HomeScreen(
                             message = "STARTING GAME"
                         )
                     }
-
                     // Start the game after a slight delay (for demonstration purposes)
                     scope.launch {
                         delay(2000) // Adjust the delay time as needed
-                        vm.startGame()
                         navController.navigate("GameScreen")
+                        vm.startGame()
                     }
                 }
             ){

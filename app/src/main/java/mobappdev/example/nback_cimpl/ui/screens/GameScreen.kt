@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,19 +48,19 @@ import mobappdev.example.nback_cimpl.ui.viewmodels.FakeVM
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mobappdev.example.nback_cimpl.R
 
 
 @Composable
 fun GameScreen(
     vm:GameViewModel, navController: NavController)
 {
-    val score = '0'
     val snackBarHostState = remember { SnackbarHostState() }
     val nback = vm.nBack
     val gameState by vm.gameState.collectAsState()
-    val totalEvents = gameState.size
-    val nBackEvent = gameState.index
-    val match = gameState.isMatch
+    val highscore by vm.highscore.collectAsState()
+    val totalEvents = gameState.size.value // Access size from the ViewModel
+    val nBackEvent = gameState.index.value
     val scoreState by vm.score.collectAsState()    // Call the runVisualGame function when the GameScreen is created or based on some trigger
 
     Scaffold (
@@ -78,10 +79,10 @@ fun GameScreen(
             ) {
                 // Button with left arrow icon
                 Button(
-                    onClick = { navController.navigate("HomeScreen")},
+                    onClick = {
+                        navController.navigate("HomeScreen")},
                     modifier = Modifier.padding(end = 1.dp)
-                ) {
-                    Icon(
+                ) { Icon(
                         painter = painterResource(id = mobappdev.example.nback_cimpl.R.drawable.pngtree_vector_left_arrow_icon_png_image_927204), // Replace with your arrow icon
                         contentDescription = "Arrow icon",
                         modifier = Modifier.size(24.dp)
@@ -96,7 +97,7 @@ fun GameScreen(
             )
             Spacer(modifier = Modifier.height(10.dp))
             Text(modifier = Modifier.padding(2.dp),
-                text = "current event = ${nBackEvent}/${totalEvents}",
+                text = "current event = ${nBackEvent+1}/${totalEvents}",
                 style = MaterialTheme.typography.headlineMedium)
             Text(modifier = Modifier.padding(2.dp),
                 text = "N = $nback",
@@ -114,33 +115,47 @@ fun GameScreen(
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ){
+                val buttonColor = gameState.buttonColor.value
+
                 Button(
                     onClick = {
-                        // Logic to check isMatch
-
-                        // Logic to handle isMatch value
-                        if (match) {
-                            // If isMatch is true, turn the button slightly green and increase the score
-                            // Adjust button color and increment score
-                            vm.incrementScore() // Assuming you have a function to increment the score in your ViewModel
-                        } else {
-                            // If isMatch is false, turn the button slightly red
-                            // Adjust button color accordingly
-                        }
-                    }
-                ,
+                        // Check if there's a match based on the game state
+                        vm.checkMatch()
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .height(150.dp)
-                        .fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary))
-                    {
-                        Text(text = "Match",
-                            style = TextStyle(fontSize = 60.sp)
+                        .fillMaxWidth()
+                        .padding(end = 1.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    contentPadding = PaddingValues(8.dp) // Add content padding to see the background color
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.visual),
+                            contentDescription = "Visual Icon",
+                            modifier = Modifier.size(40.dp),
+                            tint = when (buttonColor) {
+                                Color.Green -> Color.Green // Set button background color to green when button color is green
+                                Color.Red -> Color.Red // Set button background color to red when button color is red
+                                else -> Color.White // Default button background color
+                            }// Adjust the icon size as needed
                         )
-                    }
+                        Spacer(modifier = Modifier.width(14.dp)) // Add space between icon and text
+                        Text(
+                            text = "Position",
+                            style = TextStyle(fontSize = 60.sp),
+                            color = when (buttonColor) {
+                                Color.Green -> Color.Green // Set button background color to green when button color is green
+                                Color.Red -> Color.Red // Set button background color to red when button color is red
+                                else -> Color.White // Default button background color
+                            }
+                        )}
+                }
+
             }
         }
     }
@@ -163,14 +178,14 @@ fun GridContainer(stimuliIndices: Int) {
             if (index in highlightedCells) {
                 scope.launch {
                     cells = cells.toMutableList().also { updatedCells ->
-                        updatedCells[index] = CellData(index, Color.Green)
+                        updatedCells[index] = CellData(index, Color.Yellow)
                     }
                     delay(2000) // Adjust delay time as needed
                     cells = cells.toMutableList().also { updatedCells ->
                         updatedCells[index] = CellData(index, Color.LightGray)
                     }
                 }
-                CellData(index, Color.Green)
+                CellData(index, Color.Yellow)
             } else {
                 cellData
             }
@@ -186,6 +201,7 @@ fun GridContainer(stimuliIndices: Int) {
     ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
+            modifier = Modifier.padding(4.dp), // Add space between cells
             content = {
                 items(cells.size) { index ->
                     Cell(cellData = cells[index])
@@ -195,27 +211,27 @@ fun GridContainer(stimuliIndices: Int) {
     }
 }
 
+
 @Composable
 fun Cell(cellData: CellData) {
     Box(
         modifier = Modifier
             .height(100.dp)
             .width(100.dp)
-            .background(cellData.color)
-            .padding(8.dp)
-            .shadow(1.dp)
+            .padding(4.dp) // Add padding around the cell
     ) {
-        // You can add content inside the cell if needed
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp),
+                .background(cellData.color)
+                .padding(8.dp), // Add padding inside the cell
             contentAlignment = Alignment.Center
         ) {
             Text(text = "${cellData.index}")
         }
     }
 }
+
 
 data class CellData(val index: Int, val color: Color)
 

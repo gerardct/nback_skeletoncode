@@ -53,6 +53,8 @@ class MainActivity : ComponentActivity() {
                         startDestination = "HomeScreen"
                     ) {
                         composable("HomeScreen") {
+                            gameViewModel.resetGame()
+
                             HomeScreen(vm = gameViewModel, navController = navController)
                         }
                         composable("GameScreen") {
