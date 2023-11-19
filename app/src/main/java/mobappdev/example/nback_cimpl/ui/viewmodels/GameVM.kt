@@ -44,7 +44,10 @@ interface GameViewModel {
     fun startGame()
 
     fun checkMatch()
+    fun incrementScore()
+
 }
+
 
 class GameVM(
     private val userPreferencesRepository: UserPreferencesRepository
@@ -73,8 +76,9 @@ class GameVM(
     private var events = emptyArray<Int>()  // Array with all events
 
     private val _events = MutableStateFlow(emptyList<Int>())
-
-
+    override fun incrementScore() {
+        _score.value++
+    }
 
     override fun setGameType(gameType: GameType) {
         // update the gametype in the gamestate
@@ -88,7 +92,8 @@ class GameVM(
         _events.value = generatedEvents
 
         // Get the events from our C-model (returns IntArray, so we need to convert to Array<Int>)
-        events = nBackHelper.generateNBackString(10, 9, 30,nBack).toList().toTypedArray()  // Todo Higher Grade: currently the size etc. are hardcoded, make these based on user input
+        events = nBackHelper.generateNBackString(10, 9, 30, nBack).toList()
+            .toTypedArray()  // Todo Higher Grade: currently the size etc. are hardcoded, make these based on user input
         Log.d("GameVM", "The following sequence was generated: ${events.contentToString()}")
 
         job = viewModelScope.launch {
@@ -98,6 +103,14 @@ class GameVM(
                 GameType.Visual -> runVisualGame(events, nBack)
             }
             // Todo: update the highscore
+            val obtainedScore = _score.value
+            val previousHighScore = _highscore.value
+
+            if (obtainedScore > previousHighScore) {
+                // Update the high score if the obtained score is higher
+                userPreferencesRepository.saveHighScore(obtainedScore)
+                _highscore.value = obtainedScore
+            }
         }
     }
 
@@ -112,8 +125,8 @@ class GameVM(
     }
 
     private suspend fun runVisualGame(events: Array<Int>, nBack: Int) {
+        delay(2000)
         // Todo: Replace this code for actual game code
-        var index = 0
         for (index in events[0] until events.size) {
             val currentEvent = events[index]
             val nBackEvent = events[index - nBack]
@@ -193,4 +206,5 @@ class FakeVM: GameViewModel{
 
     override fun checkMatch() {
     }
+    override fun incrementScore(){}
 }

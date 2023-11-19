@@ -31,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mobappdev.example.nback_cimpl.R
 import mobappdev.example.nback_cimpl.ui.viewmodels.FakeVM
@@ -98,18 +99,21 @@ fun HomeScreen(
             }
             Button(
                 onClick = {
-                    // Start the game when the button is clicked
-                    vm.startGame()
-                    // Navigate to the GameScreen
-                    navController.navigate("GameScreen")
-                    // Show a snackbar
+                    // Show a snackbar first
                     scope.launch {
                         snackBarHostState.showSnackbar(
                             message = "STARTING GAME"
                         )
                     }
+
+                    // Start the game after a slight delay (for demonstration purposes)
+                    scope.launch {
+                        delay(2000) // Adjust the delay time as needed
+                        vm.startGame()
+                        navController.navigate("GameScreen")
+                    }
                 }
-            ) {
+            ){
                 Text(
                     modifier = Modifier.padding(16.dp),
                     text = "Start Game".uppercase(),
@@ -166,7 +170,7 @@ fun HomeScreen(
 @Composable
 fun HomeScreenPreview() {
     // Since I am injecting a VM into my homescreen that depends on Application context, the preview doesn't work.
-    Surface(){
+    Surface {
         HomeScreen(FakeVM(), navController = rememberNavController())
     }
 }

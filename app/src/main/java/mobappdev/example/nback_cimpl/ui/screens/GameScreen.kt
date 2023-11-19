@@ -58,8 +58,9 @@ fun GameScreen(
     val nback = vm.nBack
     val gameState by vm.gameState.collectAsState()
     val totalEvents = gameState.size
-    val nBackEvent = gameState.index // Assuming this property exists in GameState
-    // Call the runVisualGame function when the GameScreen is created or based on some trigger
+    val nBackEvent = gameState.index
+    val match = gameState.isMatch
+    val scoreState by vm.score.collectAsState()    // Call the runVisualGame function when the GameScreen is created or based on some trigger
 
     Scaffold (
         snackbarHost = { SnackbarHost (snackBarHostState) }
@@ -90,10 +91,10 @@ fun GameScreen(
 
             Text(
                 modifier = Modifier.padding(22.dp),
-                text = "Score = $score",
+                text = "Score = $scoreState",
                 style = MaterialTheme.typography.headlineLarge
             )
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(modifier = Modifier.padding(2.dp),
                 text = "current event = ${nBackEvent}/${totalEvents}",
                 style = MaterialTheme.typography.headlineMedium)
@@ -113,7 +114,21 @@ fun GameScreen(
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ){
-                Button(onClick = { /*TODO*/ },
+                Button(
+                    onClick = {
+                        // Logic to check isMatch
+
+                        // Logic to handle isMatch value
+                        if (match) {
+                            // If isMatch is true, turn the button slightly green and increase the score
+                            // Adjust button color and increment score
+                            vm.incrementScore() // Assuming you have a function to increment the score in your ViewModel
+                        } else {
+                            // If isMatch is false, turn the button slightly red
+                            // Adjust button color accordingly
+                        }
+                    }
+                ,
                     modifier = Modifier
                         .weight(1f)
                         .height(150.dp)
