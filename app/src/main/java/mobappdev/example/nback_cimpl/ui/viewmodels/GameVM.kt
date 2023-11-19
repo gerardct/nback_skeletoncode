@@ -1,5 +1,6 @@
 package mobappdev.example.nback_cimpl.ui.viewmodels
 
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -11,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.navigation.NavController
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +22,7 @@ import kotlinx.coroutines.launch
 import mobappdev.example.nback_cimpl.GameApplication
 import mobappdev.example.nback_cimpl.NBackHelper
 import mobappdev.example.nback_cimpl.data.UserPreferencesRepository
+import java.util.Locale
 
 /**
  * This is the GameViewModel.
@@ -47,6 +50,8 @@ interface GameViewModel {
 
     fun setGameType(gameType: GameType)
     fun startGame()
+
+    fun updateButtonClickValue(value: Int)
 
     fun checkMatch()
     fun resetGame()
@@ -93,7 +98,7 @@ class GameVM(
         _score.value = 0
         _gameState.value = GameState()}
 
-        override fun startGame() {
+    override fun startGame() {
         job?.cancel()  // Cancel any existing game loop
         _score.value = 0
         // Get the events from our C-model (returns IntArray, so we need to convert to Array<Int>)
@@ -104,7 +109,7 @@ class GameVM(
 
         job = viewModelScope.launch {
             when (gameState.value.gameType) {
-                GameType.Audio -> runAudioGame()
+                GameType.Audio -> runAudioGame(events, nBack)
                 GameType.AudioVisual -> runAudioVisualGame()
                 GameType.Visual -> runVisualGame(events, nBack)
             }
@@ -119,36 +124,96 @@ class GameVM(
             }
         }
     }
+    // Other properties and methods
+
+    private val debounceTimeMillis = 2000L // Adjust this debounce time as needed
+    private var lastClickTimeMillis = 0L
+    var buttonClick: Int = 0 // Initially set to 0
+
+    override fun updateButtonClickValue(value: Int) {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastClickTimeMillis >= debounceTimeMillis) {
+            lastClickTimeMillis = currentTime
+            buttonClick = value
+            checkMatch()
+        }
+    }
 
     override fun checkMatch() {
         val matchIndex = _gameState.value.index.value
         val match = _gameState.value.isMatch
-        val incrementedIndices = mutableSetOf<Int>()
-        var isScoreIncrementedForMatch: Boolean = false
 
-        if (matchIndex > nBack && match && !isScoreIncrementedForMatch && matchIndex !in incrementedIndices) {
-            _score.value++
-            _gameState.value.buttonColor.value = Color.Green
-            // Add the current matchIndex to the set
-            incrementedIndices.add(matchIndex)
-            isScoreIncrementedForMatch = true // Consider setting this to true here if applicable
+        if (buttonClick == 1) {
+            if (matchIndex > nBack && match) {
+                _score.value++
+                _gameState.value.buttonColor.value = Color.Green
+                // Add the current matchIndex to the set
+            } else {
+                _gameState.value.buttonColor.value = Color.Red
+            }
+
+            viewModelScope.launch {
+                delay(1000) // Revert button color after a short time
+                _gameState.value.buttonColor.value = Color.White
+            }
         } else {
-            _gameState.value.buttonColor.value = Color.Red
-        }
-
-            // Set a delay to revert the button color to default after a short time
-        viewModelScope.launch {
-            delay(1000) // Change this delay as needed
-            isScoreIncrementedForMatch = false // Reset flag for the next event
-            _gameState.value.buttonColor.value = Color.White
+            // Handle other cases when buttonClick is not 1
         }
     }
 
 
+    private val numberToLetter = hashMapOf(
+        1 to "A",
+        2 to "B",
+        3 to "C",
+        4 to "D",
+        5 to "E",
+        6 to "F",
+        7 to "G",
+        8 to "H",
+        9 to "I"
+    )
 
-    private fun runAudioGame() {
-        // Todo: Make work for Basic grade
+    private suspend fun runAudioGame(events: Array<Int>, nBack: Int) {
+        delay(2000)
+
+        val numberToLetter = hashMapOf(
+            1 to "A",
+            2 to "B",
+            3 to "C",
+            4 to "D",
+            5 to "E",
+            6 to "F",
+            7 to "G",
+            8 to "H",
+            9 to "I"
+        )
+
+        for (index in events.indices) {
+            _gameState.value = _gameState.value.copy(eventValue = events[index])
+            gameState.value.index.value = index
+
+            // Speak the letter associated with the number
+            val letter = numberToLetter[events[index]]
+            if (letter != null) {
+                //textToSpeech.speak(letter, TextToSpeech.QUEUE_ADD, null, null)
+                delay(eventInterval) // Add delay between letters
+            }
+
+            if (index >= nBack) {
+                if (events[index] == events[index - nBack]) {
+                    _gameState.value = _gameState.value.copy(isMatch = true)
+                    Log.d("Check:match", "True")
+                } else {
+                    _gameState.value = _gameState.value.copy(isMatch = false)
+                    Log.d("Check_match", "False")
+                }
+            }
+            // Add a delay between events if needed
+            delay(eventInterval)
+        }
     }
+
 
     private suspend fun runVisualGame(events: Array<Int>, nBack: Int) {
             delay(2000)
@@ -223,7 +288,7 @@ class FakeVM: GameViewModel{
     override val nBack: Int
         get() = 2
     override val size: StateFlow<Int>
-        get() = MutableStateFlow(10)
+        get() = MutableStateFlow(0)
 
     override fun setGameType(gameType: GameType) {
     }
@@ -231,6 +296,8 @@ class FakeVM: GameViewModel{
     override fun startGame() {
     }
 
+    override fun updateButtonClickValue(value: Int) {
+    }
     override fun checkMatch() {
     }
 

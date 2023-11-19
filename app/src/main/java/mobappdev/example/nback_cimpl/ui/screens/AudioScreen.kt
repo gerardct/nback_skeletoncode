@@ -1,6 +1,5 @@
 package mobappdev.example.nback_cimpl.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,11 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -26,16 +22,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -44,23 +35,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import mobappdev.example.nback_cimpl.R
 import mobappdev.example.nback_cimpl.ui.viewmodels.FakeVM
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import mobappdev.example.nback_cimpl.R
-
 
 @Composable
-fun GameScreen(
-    vm:GameViewModel, navController: NavController)
-{
+fun AudioScreen(vm: GameViewModel, navController: NavController){
     val snackBarHostState = remember { SnackbarHostState() }
     val nback = vm.nBack
     val gameState by vm.gameState.collectAsState()
-    val totalEvents = gameState.size.value // Access size from the ViewModel
+    val totalEvents = gameState.size.value// Access size from the ViewModel
     val nBackEvent = gameState.index.value
-    val scoreState by vm.score.collectAsState()    // Call the runVisualGame function when the GameScreen is created or based on some trigger
+    val scoreState by vm.score.collectAsState()
 
     Scaffold (
         snackbarHost = { SnackbarHost (snackBarHostState) }
@@ -74,7 +60,9 @@ fun GameScreen(
         ){
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(16.dp).fillMaxWidth()
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()
             ) {
                 // Button with left arrow icon
                 Button(
@@ -82,10 +70,10 @@ fun GameScreen(
                         navController.navigate("HomeScreen")},
                     modifier = Modifier.padding(end = 1.dp)
                 ) { Icon(
-                        painter = painterResource(id = mobappdev.example.nback_cimpl.R.drawable.pngtree_vector_left_arrow_icon_png_image_927204), // Replace with your arrow icon
-                        contentDescription = "Arrow icon",
-                        modifier = Modifier.size(24.dp)
-                    )
+                    painter = painterResource(id = R.drawable.pngtree_vector_left_arrow_icon_png_image_927204), // Replace with your arrow icon
+                    contentDescription = "Arrow icon",
+                    modifier = Modifier.size(24.dp)
+                )
                 }
             }
 
@@ -105,8 +93,10 @@ fun GameScreen(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                GridContainer(gameState.eventValue)
-            }
+                Icon(
+                    painter = painterResource(id = R.drawable.sound_on),
+                    contentDescription = "Visual Icon",
+                    modifier = Modifier.size(250.dp))}
             Row (
                 modifier = Modifier
                     .fillMaxWidth()
@@ -152,92 +142,18 @@ fun GameScreen(
                                 Color.Red -> Color.Red // Set button background color to red when button color is red
                                 else -> Color.White // Default button background color
                             }
-                        )}
-                }
-
-            }
-        }
-    }
-}
-@Composable
-fun GridContainer(stimuliIndices: Int) {
-    val totalCells = 9
-
-    var cells by remember { mutableStateOf(List(totalCells) { index ->
-        CellData(index, Color.LightGray)
-    }) }
-
-    val scope = rememberCoroutineScope()
-
-    LaunchedEffect(stimuliIndices) {
-        val highlightedCells = mutableSetOf<Int>()
-        highlightedCells += stimuliIndices
-
-        cells = cells.mapIndexed { index, cellData ->
-            if (index in highlightedCells) {
-                scope.launch {
-                    cells = cells.toMutableList().also { updatedCells ->
-                        updatedCells[index] = CellData(index, Color.Yellow)
-                    }
-                    delay(2000) // Adjust delay time as needed
-                    cells = cells.toMutableList().also { updatedCells ->
-                        updatedCells[index] = CellData(index, Color.LightGray)
+                        )
                     }
                 }
-                CellData(index, Color.Yellow)
-            } else {
-                cellData
+
             }
         }
     }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .background(Color.White),
-        contentAlignment = Alignment.Center
-    ) {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            modifier = Modifier.padding(4.dp), // Add space between cells
-            content = {
-                items(cells.size) { index ->
-                    Cell(cellData = cells[index])
-                }
-            }
-        )
-    }
 }
-
-
-@Composable
-fun Cell(cellData: CellData) {
-    Box(
-        modifier = Modifier
-            .height(100.dp)
-            .width(100.dp)
-            .padding(4.dp) // Add padding around the cell
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(cellData.color)
-                .padding(8.dp), // Add padding inside the cell
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text = "${cellData.index}")
-        }
-    }
-}
-
-
-data class CellData(val index: Int, val color: Color)
 
 @Preview
 @Composable
-fun GameScreenPreview() {
+fun AudioScreenPreview() {
     // Since I am injecting a VM into my homescreen that depends on Application context, the preview doesn't work.
-    Surface { GameScreen(FakeVM(), navController = rememberNavController())}
+    Surface { AudioScreen(FakeVM(), navController = rememberNavController()) }
 }
-

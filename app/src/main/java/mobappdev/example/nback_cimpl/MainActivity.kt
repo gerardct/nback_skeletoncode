@@ -1,6 +1,8 @@
 package mobappdev.example.nback_cimpl
 
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +18,7 @@ import mobappdev.example.nback_cimpl.ui.screens.HomeScreen
 import mobappdev.example.nback_cimpl.ui.theme.NBack_CImplTheme
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameVM
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameViewModel
+import java.util.Locale
 
 /**
  * This is the MainActivity of the application
@@ -32,8 +35,28 @@ import mobappdev.example.nback_cimpl.ui.viewmodels.GameViewModel
 
 
 class MainActivity : ComponentActivity() {
+    private lateinit var textToSpeech: TextToSpeech
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Initialize TextToSpeech
+        textToSpeech = TextToSpeech(this) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                val result = textToSpeech.setLanguage(Locale.US)
+
+                if (result == TextToSpeech.LANG_MISSING_DATA ||
+                    result == TextToSpeech.LANG_NOT_SUPPORTED
+                ) {
+                    Log.e("TTS", "Language not supported")
+                } else {
+                    // TextToSpeech initialized successfully
+                    // Now, you can use 'textToSpeech' in your application
+                }
+            } else {
+                Log.e("TTS", "Initialization failed")
+            }
+        }
+
         setContent {
             NBack_CImplTheme {
                 // A surface container using the 'background' color from the theme
