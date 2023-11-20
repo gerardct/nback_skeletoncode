@@ -30,7 +30,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -41,9 +40,7 @@ import kotlinx.coroutines.launch
 import mobappdev.example.nback_cimpl.R
 import mobappdev.example.nback_cimpl.ui.viewmodels.FakeVM
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameType
-import mobappdev.example.nback_cimpl.ui.viewmodels.GameVM
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameViewModel
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 /**
  * This is the Home screen composable
@@ -64,11 +61,12 @@ fun HomeScreen(
     vm: GameViewModel, navController: NavController
 ) {
     val highscore by vm.highscore.collectAsState()  // Highscore is its own StateFlow
-    val gameState by vm.gameState.collectAsState()
     val snackBarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val gameType by vm.gameState.map { it.gameType }.collectAsState("")
     val nback = vm.nBack
+    val scoreState by vm.score.collectAsState()    // Call the runVisualGame function when the GameScreen is created or based on some trigger
+
 
 
 
@@ -77,17 +75,24 @@ fun HomeScreen(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxHeight()
                 .padding(it),
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(text = "N-Back game",
-                style = MaterialTheme.typography.headlineLarge
+                style = MaterialTheme.typography.headlineLarge,
+                modifier = Modifier.padding(32.dp),
+
+                )
+            Text(
+                modifier = Modifier.padding(50.dp),
+                text = "High-Score = $highscore",
+                style = MaterialTheme.typography.headlineMedium
             )
             Text(
-                modifier = Modifier.padding(32.dp),
-                text = "High-Score = $highscore",
+                modifier = Modifier.padding(5.dp),
+                text = "Previous score = $scoreState",
                 style = MaterialTheme.typography.headlineMedium
             )
             Box(modifier = Modifier.padding(32.dp),
@@ -119,7 +124,7 @@ fun HomeScreen(
                     }
                     // Start the game after a slight delay (for demonstration purposes)
                     scope.launch {
-                        delay(2000) // Adjust the delay time as need
+                        delay(500) // Adjust the delay time as need
                         when (vm.gameState.value.gameType) {
                             GameType.Audio -> navController.navigate("AudioScreen")
                             else -> navController.navigate("GameScreen")}

@@ -44,7 +44,7 @@ fun AudioScreen(vm: GameViewModel, navController: NavController){
     val snackBarHostState = remember { SnackbarHostState() }
     val nback = vm.nBack
     val gameState by vm.gameState.collectAsState()
-    val totalEvents = gameState.size.value// Access size from the ViewModel
+    val totalEvents = vm.size.collectAsState().value  // Access size from the ViewModel
     val nBackEvent = gameState.index.value
     val scoreState by vm.score.collectAsState()
 
@@ -67,10 +67,11 @@ fun AudioScreen(vm: GameViewModel, navController: NavController){
                 // Button with left arrow icon
                 Button(
                     onClick = {
-                        navController.navigate("HomeScreen")},
+                        navController.navigate("HomeScreen")
+                        vm.resetGame()},
                     modifier = Modifier.padding(end = 1.dp)
                 ) { Icon(
-                    painter = painterResource(id = R.drawable.pngtree_vector_left_arrow_icon_png_image_927204), // Replace with your arrow icon
+                    painter = painterResource(id = R.drawable.home), // Replace with your arrow icon
                     contentDescription = "Arrow icon",
                     modifier = Modifier.size(24.dp)
                 )
@@ -84,7 +85,7 @@ fun AudioScreen(vm: GameViewModel, navController: NavController){
             )
             Spacer(modifier = Modifier.height(10.dp))
             Text(modifier = Modifier.padding(2.dp),
-                text = "current event = ${nBackEvent+1}/${totalEvents-1}",
+                text = "current event = ${nBackEvent+1}/${totalEvents}",
                 style = MaterialTheme.typography.headlineMedium)
             Text(modifier = Modifier.padding(2.dp),
                 text = "N = $nback",
@@ -108,7 +109,7 @@ fun AudioScreen(vm: GameViewModel, navController: NavController){
 
                 Button(
                     onClick = {
-                        vm.checkMatch()// Modify buttonClick value to 0 when the button is clicked
+                        vm.checkMatch()
                     },
                     modifier = Modifier
                         .weight(1f)

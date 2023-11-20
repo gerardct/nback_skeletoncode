@@ -51,36 +51,41 @@ import mobappdev.example.nback_cimpl.R
 
 @Composable
 fun GameScreen(
-    vm:GameViewModel, navController: NavController)
-{
+    vm:GameViewModel, navController: NavController) {
     val snackBarHostState = remember { SnackbarHostState() }
     val nback = vm.nBack
     val gameState by vm.gameState.collectAsState()
-    val totalEvents = gameState.size.value // Access size from the ViewModel
+    val totalEvents = vm.size.collectAsState().value  // Access size from the ViewModel
     val nBackEvent = gameState.index.value
     val scoreState by vm.score.collectAsState()    // Call the runVisualGame function when the GameScreen is created or based on some trigger
+    val gameFinishedState = remember { mutableStateOf(false) }
 
-    Scaffold (
-        snackbarHost = { SnackbarHost (snackBarHostState) }
-    ){
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackBarHostState) }
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
-        ){
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(16.dp).fillMaxWidth()
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()
             ) {
                 // Button with left arrow icon
                 Button(
                     onClick = {
-                        navController.navigate("HomeScreen")},
+                        navController.navigate("HomeScreen")
+                        vm.resetGame()
+                    },
                     modifier = Modifier.padding(end = 1.dp)
-                ) { Icon(
-                        painter = painterResource(id = R.drawable.pngtree_vector_left_arrow_icon_png_image_927204), // Replace with your arrow icon
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.home), // Replace with your arrow icon
                         contentDescription = "Arrow icon",
                         modifier = Modifier.size(24.dp)
                     )
@@ -93,12 +98,16 @@ fun GameScreen(
                 style = MaterialTheme.typography.headlineLarge
             )
             Spacer(modifier = Modifier.height(10.dp))
-            Text(modifier = Modifier.padding(2.dp),
-                text = "current event = ${nBackEvent+1}/${totalEvents-1}",
-                style = MaterialTheme.typography.headlineMedium)
-            Text(modifier = Modifier.padding(2.dp),
+            Text(
+                modifier = Modifier.padding(2.dp),
+                text = "current event = ${nBackEvent + 1}/${totalEvents}",
+                style = MaterialTheme.typography.headlineMedium
+            )
+            Text(
+                modifier = Modifier.padding(2.dp),
                 text = "N = $nback",
-                style = MaterialTheme.typography.headlineSmall)
+                style = MaterialTheme.typography.headlineSmall
+            )
             Box(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.Center
@@ -116,13 +125,13 @@ fun GameScreen(
                 }
             }
 
-            Row (
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
-            ){
+            ) {
                 val buttonColor = gameState.buttonColor.value
 
                 Button(
@@ -160,14 +169,14 @@ fun GameScreen(
                                 Color.Red -> Color.Red // Set button background color to red when button color is red
                                 else -> Color.White // Default button background color
                             }
-                        )}
+                        )
+                    }
                 }
 
             }
         }
     }
 }
-
 @Composable
 fun Grid(
     highlightedIndex: Int

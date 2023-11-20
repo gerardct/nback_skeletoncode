@@ -50,6 +50,8 @@ interface GameViewModel {
 
     fun checkMatch()
     fun resetGame()
+    fun setGameFinished(value: Boolean)
+    fun getGameFinished(): Boolean?
 }
 
 
@@ -90,16 +92,27 @@ class GameVM(
     override fun resetGame() {
         // Reset score, game state, or any other necessary values
         _score.value = 0
-        _gameState.value = GameState()}
+        _gameState.value = GameState()
+        job?.cancel()  // Cancel any existing game loop
+    }
+    private var _gameFinished: Boolean? = null
 
+    override fun setGameFinished(value: Boolean) {
+        _gameFinished = value
+    }
+
+    override fun getGameFinished(): Boolean? {
+        return _gameFinished
+    }
     override fun startGame() {
         job?.cancel()  // Cancel any existing game loop
+        setGameFinished(false) // Set gameFinished using the method
         _score.value = 0
         // Get the events from our C-model (returns IntArray, so we need to convert to Array<Int>)
         events = nBackHelper.generateNBackString(10, 9, 30, nBack).toList()
             .toTypedArray()  // Todo Higher Grade: currently the size etc. are hardcoded, make these based on user input
         Log.d("GameVM", "The following sequence was generated: ${events.contentToString()}")
-        gameState.value.size.value  = events.size
+        _size.value  = events.size
 
         job = viewModelScope.launch {
             when (gameState.value.gameType) {
@@ -115,65 +128,69 @@ class GameVM(
                 // Update the high score if the obtained score is higher
                 userPreferencesRepository.saveHighScore(obtainedScore)
                 _highscore.value = obtainedScore
+
             }
         }
     }
     // Other properties and methods
-    var playedEvent: Boolean? = null  // Declare as a property of the class
+    private var playedEvent: Boolean? = null  // Declare as a property of the class
 
     private suspend fun runAudioGame(events: Array<Int>, nBack: Int) {
-        delay(2000)
+        delay(500)
 
         val numberToLetter = hashMapOf(
-            1 to "A",
-            2 to "B",
-            3 to "C",
-            4 to "D",
-            5 to "E",
-            6 to "F",
-            7 to "G",
-            8 to "H",
-            9 to "I"
+            1 to "X",
+            2 to "Y",
+            3 to "Z",
+            4 to "O",
+            5 to "Q",
+            6 to "R",
+            7 to "S",
+            8 to "T",
+            9 to "U"
         )
+        playedEvent = false  // Set to false at the beginning of each event
 
         for (index in events.indices) {
             _gameState.value = _gameState.value.copy(eventValue = events[index])
             gameState.value.index.value = index
-            playedEvent = false  // Set to false at the beginning of each event
+
 
             // Speak the letter associated with the number
             val letter = numberToLetter[events[index]]
             if (letter != null) {
                 textToSpeech?.speak(letter, TextToSpeech.QUEUE_FLUSH, null, null)
-                delay(eventInterval) // Add delay between letters
             }
+            if (index >= nBack) {
              if (events[index] == events[index - nBack]) {
                     _gameState.value = _gameState.value.copy(isMatch = true)
-                    Log.d("Check:match", "True")
-                } else {
+                    Log.d("Check_match", "True")
+                }
+             else {
                     _gameState.value = _gameState.value.copy(isMatch = false)
                     Log.d("Check_match", "False")
-            }
+            }}
             // Add a delay between events if needed
             delay(eventInterval)
             playedEvent = false  // Set to false at the beginning of each event
-
         }
+        delay(400)
+        setGameFinished(true)
     }
 
     private suspend fun runVisualGame(events: Array<Int>, nBack: Int) {
-        delay(2000)
+        playedEvent = false  // Set to false at the beginning of each event
+        delay(500)
 
         for (index in events.indices) {
             _gameState.value = _gameState.value.copy(eventValue = events[index])
             gameState.value.index.value = index
-            playedEvent = false  // Set to false at the beginning of each event
 
 
             if (index >= nBack) {
                 if (events[index] == events[index - nBack]) {
                     _gameState.value = _gameState.value.copy(isMatch = true)
-                    Log.d("Check:match", "True")
+                    Log.d("Check_match", "True")
                 } else {
                     _gameState.value = _gameState.value.copy(isMatch = false)
                     Log.d("Check_match", "False")
@@ -183,8 +200,9 @@ class GameVM(
             // Add a delay between events if needed
             delay(eventInterval)
             playedEvent = false  // Set to false at the beginning of each event
-
         }
+        delay(400)
+        setGameFinished(true)
     }
 
     override fun checkMatch() {
@@ -192,20 +210,18 @@ class GameVM(
         val match = _gameState.value.isMatch
 
         if (playedEvent == false) {
-            playedEvent = true
-            if (matchIndex > nBack && match) {
+            if (matchIndex >= nBack && match) {
                 _score.value++
                 _gameState.value.buttonColor.value = Color.Green
                 // Add the current matchIndex to the set
+                playedEvent = true
             } else {
                 _gameState.value.buttonColor.value = Color.Red
             }
-
             viewModelScope.launch {
-                delay(1000) // Revert button color after a short time
+                delay(500) // Revert button color after a short time
                 _gameState.value.buttonColor.value = Color.White
-            }
-        } else {
+            } } else {
             // Handle the case when playedEvent is already true or null
         }
     }
@@ -264,7 +280,6 @@ class FakeVM: GameViewModel{
         get() = 2
     override val size: StateFlow<Int>
         get() = MutableStateFlow(0)
-
     override fun setGameType(gameType: GameType) {
     }
 
@@ -274,5 +289,14 @@ class FakeVM: GameViewModel{
     }
 
     override fun resetGame() {
+    }
+    private var _gameFinished: Boolean? = null
+
+    override fun setGameFinished(value: Boolean) {
+        _gameFinished = value
+    }
+
+    override fun getGameFinished(): Boolean? {
+        return _gameFinished
     }
 }
