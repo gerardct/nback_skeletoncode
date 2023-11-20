@@ -13,6 +13,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import mobappdev.example.nback_cimpl.ui.screens.AudioScreen
 import mobappdev.example.nback_cimpl.ui.screens.GameScreen
 import mobappdev.example.nback_cimpl.ui.screens.HomeScreen
 import mobappdev.example.nback_cimpl.ui.theme.NBack_CImplTheme
@@ -69,6 +70,7 @@ class MainActivity : ComponentActivity() {
                     val gameViewModel: GameVM = viewModel(
                         factory = GameVM.Factory
                     )
+                    gameViewModel.textToSpeech = textToSpeech
 
                     // Pass NavController to HomeScreen
                     NavHost(
@@ -83,6 +85,10 @@ class MainActivity : ComponentActivity() {
                         composable("GameScreen") {
                             // Instantiate the viewmodel
                             GameScreen(vm = gameViewModel, navController = navController)
+                        }
+                        composable("AudioScreen") {
+                            // Instantiate the viewmodel
+                            AudioScreen(vm = gameViewModel, navController = navController)
                         }
                     }
                 }

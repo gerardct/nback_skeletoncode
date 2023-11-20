@@ -4,7 +4,6 @@ import android.speech.tts.TextToSpeech
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -12,7 +11,6 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.navigation.NavController
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +20,6 @@ import kotlinx.coroutines.launch
 import mobappdev.example.nback_cimpl.GameApplication
 import mobappdev.example.nback_cimpl.NBackHelper
 import mobappdev.example.nback_cimpl.data.UserPreferencesRepository
-import java.util.Locale
 
 /**
  * This is the GameViewModel.
@@ -51,17 +48,13 @@ interface GameViewModel {
     fun setGameType(gameType: GameType)
     fun startGame()
 
-    fun updateButtonClickValue(value: Int)
-
     fun checkMatch()
     fun resetGame()
 }
 
 
 class GameVM(
-    private val userPreferencesRepository: UserPreferencesRepository
-): GameViewModel, ViewModel() {
-
+    private val userPreferencesRepository: UserPreferencesRepository): GameViewModel, ViewModel() {
     private val _gameState = MutableStateFlow(GameState())
     override val gameState: StateFlow<GameState>
         get() = _gameState.asStateFlow()
@@ -88,6 +81,7 @@ class GameVM(
     private val nBackHelper = NBackHelper()  // Helper that generate the event array
     private var events = emptyArray<Int>()  // Array with all events
 
+    var textToSpeech: TextToSpeech? = null
 
     override fun setGameType(gameType: GameType) {
         // update the gametype in the gamestate
@@ -104,7 +98,7 @@ class GameVM(
         // Get the events from our C-model (returns IntArray, so we need to convert to Array<Int>)
         events = nBackHelper.generateNBackString(10, 9, 30, nBack).toList()
             .toTypedArray()  // Todo Higher Grade: currently the size etc. are hardcoded, make these based on user input
-        Log.d("GameVM", "The following sequence was generated: ${events.contentToString()}");
+        Log.d("GameVM", "The following sequence was generated: ${events.contentToString()}")
         gameState.value.size.value  = events.size
 
         job = viewModelScope.launch {
@@ -125,54 +119,6 @@ class GameVM(
         }
     }
     // Other properties and methods
-
-    private val debounceTimeMillis = 2000L // Adjust this debounce time as needed
-    private var lastClickTimeMillis = 0L
-    var buttonClick: Int = 0 // Initially set to 0
-
-    override fun updateButtonClickValue(value: Int) {
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastClickTimeMillis >= debounceTimeMillis) {
-            lastClickTimeMillis = currentTime
-            buttonClick = value
-            checkMatch()
-        }
-    }
-
-    override fun checkMatch() {
-        val matchIndex = _gameState.value.index.value
-        val match = _gameState.value.isMatch
-
-        if (buttonClick == 1) {
-            if (matchIndex > nBack && match) {
-                _score.value++
-                _gameState.value.buttonColor.value = Color.Green
-                // Add the current matchIndex to the set
-            } else {
-                _gameState.value.buttonColor.value = Color.Red
-            }
-
-            viewModelScope.launch {
-                delay(1000) // Revert button color after a short time
-                _gameState.value.buttonColor.value = Color.White
-            }
-        } else {
-            // Handle other cases when buttonClick is not 1
-        }
-    }
-
-
-    private val numberToLetter = hashMapOf(
-        1 to "A",
-        2 to "B",
-        3 to "C",
-        4 to "D",
-        5 to "E",
-        6 to "F",
-        7 to "G",
-        8 to "H",
-        9 to "I"
-    )
 
     private suspend fun runAudioGame(events: Array<Int>, nBack: Int) {
         delay(2000)
@@ -196,7 +142,7 @@ class GameVM(
             // Speak the letter associated with the number
             val letter = numberToLetter[events[index]]
             if (letter != null) {
-                //textToSpeech.speak(letter, TextToSpeech.QUEUE_ADD, null, null)
+                textToSpeech?.speak(letter, TextToSpeech.QUEUE_FLUSH, null, null)
                 delay(eventInterval) // Add delay between letters
             }
 
@@ -215,26 +161,58 @@ class GameVM(
     }
 
 
-    private suspend fun runVisualGame(events: Array<Int>, nBack: Int) {
-            delay(2000)
+    var playedEvent: Boolean? = null  // Declare as a property of the class
 
-            // Todo: Replace this code for actual game code
-            for (index in events.indices) {
-                _gameState.value = _gameState.value.copy(eventValue = events[index])
-                gameState.value.index.value = index
-                if (index >= nBack){
-                    if (events[index] == events[index-nBack]){
-                        _gameState.value = _gameState.value.copy(isMatch = true)
-                        Log.d("Check:match","True")
-                    }
-                    else{_gameState.value = _gameState.value.copy(isMatch = false)
-                        Log.d("Check_match","False")
-                    }
+    private suspend fun runVisualGame(events: Array<Int>, nBack: Int) {
+        delay(2000)
+
+        for (index in events.indices) {
+            _gameState.value = _gameState.value.copy(eventValue = events[index])
+            gameState.value.index.value = index
+            playedEvent = false  // Set to false at the beginning of each event
+
+
+            if (index >= nBack) {
+                if (events[index] == events[index - nBack]) {
+                    _gameState.value = _gameState.value.copy(isMatch = true)
+                    Log.d("Check:match", "True")
+                } else {
+                    _gameState.value = _gameState.value.copy(isMatch = false)
+                    Log.d("Check_match", "False")
                 }
-                // Add a delay between events if needed
-                delay(eventInterval)
             }
+
+            // Add a delay between events if needed
+            delay(eventInterval)
+            playedEvent = false  // Set to false at the beginning of each event
+
         }
+    }
+
+    override fun checkMatch() {
+        val matchIndex = _gameState.value.index.value
+        val match = _gameState.value.isMatch
+
+        if (playedEvent == false) {
+            playedEvent = true
+// Check for null or false explicitly
+            if (matchIndex > nBack && match) {
+                _score.value++
+                _gameState.value.buttonColor.value = Color.Green
+                // Add the current matchIndex to the set
+            } else {
+                _gameState.value.buttonColor.value = Color.Red
+            }
+
+            viewModelScope.launch {
+                delay(1000) // Revert button color after a short time
+                _gameState.value.buttonColor.value = Color.White
+            }
+        } else {
+            // Handle the case when playedEvent is already true or null
+        }
+    }
+
 
 
     private fun runAudioVisualGame(){
@@ -294,9 +272,6 @@ class FakeVM: GameViewModel{
     }
 
     override fun startGame() {
-    }
-
-    override fun updateButtonClickValue(value: Int) {
     }
     override fun checkMatch() {
     }

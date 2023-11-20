@@ -119,8 +119,10 @@ fun HomeScreen(
                     }
                     // Start the game after a slight delay (for demonstration purposes)
                     scope.launch {
-                        delay(2000) // Adjust the delay time as needed
-                        navController.navigate("GameScreen")
+                        delay(2000) // Adjust the delay time as need
+                        when (vm.gameState.value.gameType) {
+                            GameType.Audio -> navController.navigate("AudioScreen")
+                            else -> navController.navigate("GameScreen")}
                         vm.startGame()
                     }
                 }

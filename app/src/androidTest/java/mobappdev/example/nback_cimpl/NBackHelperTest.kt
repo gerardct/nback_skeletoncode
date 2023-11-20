@@ -8,7 +8,7 @@ class NBackHelperTest {
     @Test
     fun testGenerateNBackString() {
         val size = 10
-        val combinations = 4
+        val combinations = 9
         val percentMatch = 30
         val nBack = 1
 
