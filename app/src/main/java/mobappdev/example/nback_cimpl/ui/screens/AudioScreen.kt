@@ -108,8 +108,7 @@ fun AudioScreen(vm: GameViewModel, navController: NavController){
 
                 Button(
                     onClick = {
-                        // Check if there's a match based on the game state
-                        vm.updateButtonClickValue(1)// Modify buttonClick value to 0 when the button is clicked
+                        vm.checkMatch()// Modify buttonClick value to 0 when the button is clicked
                     },
                     modifier = Modifier
                         .weight(1f)
@@ -124,7 +123,7 @@ fun AudioScreen(vm: GameViewModel, navController: NavController){
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.visual),
+                            painter = painterResource(id = R.drawable.sound_on),
                             contentDescription = "Visual Icon",
                             modifier = Modifier.size(40.dp),
                             tint = when (buttonColor) {
@@ -135,7 +134,7 @@ fun AudioScreen(vm: GameViewModel, navController: NavController){
                         )
                         Spacer(modifier = Modifier.width(14.dp)) // Add space between icon and text
                         Text(
-                            text = "Position",
+                            text = "Sound",
                             style = TextStyle(fontSize = 60.sp),
                             color = when (buttonColor) {
                                 Color.Green -> Color.Green // Set button background color to green when button color is green

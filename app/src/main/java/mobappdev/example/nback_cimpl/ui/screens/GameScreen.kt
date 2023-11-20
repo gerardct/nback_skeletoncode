@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -35,7 +34,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -82,7 +80,7 @@ fun GameScreen(
                         navController.navigate("HomeScreen")},
                     modifier = Modifier.padding(end = 1.dp)
                 ) { Icon(
-                        painter = painterResource(id = mobappdev.example.nback_cimpl.R.drawable.pngtree_vector_left_arrow_icon_png_image_927204), // Replace with your arrow icon
+                        painter = painterResource(id = R.drawable.pngtree_vector_left_arrow_icon_png_image_927204), // Replace with your arrow icon
                         contentDescription = "Arrow icon",
                         modifier = Modifier.size(24.dp)
                     )
@@ -105,8 +103,19 @@ fun GameScreen(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                GridContainer(gameState.eventValue)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Grid(
+                        highlightedIndex = gameState.eventValue,
+                    )
+                }
             }
+
             Row (
                 modifier = Modifier
                     .fillMaxWidth()
@@ -118,8 +127,7 @@ fun GameScreen(
 
                 Button(
                     onClick = {
-                        // Check if there's a match based on the game state
-                        vm.updateButtonClickValue(1)// Modify buttonClick value to 0 when the button is clicked
+                        vm.checkMatch()// Modify buttonClick value to 0 when the button is clicked
                     },
                     modifier = Modifier
                         .weight(1f)
@@ -159,6 +167,33 @@ fun GameScreen(
         }
     }
 }
+
+@Composable
+fun Grid(
+    highlightedIndex: Int
+) {
+    Column (modifier = Modifier.fillMaxSize()
+    ){
+        for (i in 0 until 3) {
+            Row (modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()){
+                for (j in 0 until 3) {
+                    val index = i * 3 + j
+                    val color = if (index + 1 == highlightedIndex) Color.Yellow else Color.LightGray
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(10.dp)
+                            .background(color)
+                            .fillMaxSize()
+                    )
+                }
+            }
+        }
+    }
+}
 @Composable
 fun GridContainer(stimuliIndices: Int) {
     val totalCells = 9
@@ -171,17 +206,21 @@ fun GridContainer(stimuliIndices: Int) {
 
     LaunchedEffect(stimuliIndices) {
         val highlightedCells = mutableSetOf<Int>()
-        highlightedCells += stimuliIndices
+
+        // Ensure the indices are within the range 0 to 8
+        val adjustedIndices = (stimuliIndices - 1) % totalCells
+
+        highlightedCells += adjustedIndices
 
         cells = cells.mapIndexed { index, cellData ->
             if (index in highlightedCells) {
                 scope.launch {
                     cells = cells.toMutableList().also { updatedCells ->
-                        updatedCells[index] = CellData(index, Color.Yellow)
+                        updatedCells[index-1] = CellData(index-1, Color.Yellow)
                     }
                     delay(2000) // Adjust delay time as needed
                     cells = cells.toMutableList().also { updatedCells ->
-                        updatedCells[index] = CellData(index, Color.LightGray)
+                        updatedCells[index-1] = CellData(index-1, Color.LightGray)
                     }
                 }
                 CellData(index, Color.Yellow)
@@ -209,6 +248,7 @@ fun GridContainer(stimuliIndices: Int) {
         )
     }
 }
+
 
 
 @Composable

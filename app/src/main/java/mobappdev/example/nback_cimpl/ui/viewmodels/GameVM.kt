@@ -119,6 +119,7 @@ class GameVM(
         }
     }
     // Other properties and methods
+    var playedEvent: Boolean? = null  // Declare as a property of the class
 
     private suspend fun runAudioGame(events: Array<Int>, nBack: Int) {
         delay(2000)
@@ -138,6 +139,7 @@ class GameVM(
         for (index in events.indices) {
             _gameState.value = _gameState.value.copy(eventValue = events[index])
             gameState.value.index.value = index
+            playedEvent = false  // Set to false at the beginning of each event
 
             // Speak the letter associated with the number
             val letter = numberToLetter[events[index]]
@@ -145,23 +147,19 @@ class GameVM(
                 textToSpeech?.speak(letter, TextToSpeech.QUEUE_FLUSH, null, null)
                 delay(eventInterval) // Add delay between letters
             }
-
-            if (index >= nBack) {
-                if (events[index] == events[index - nBack]) {
+             if (events[index] == events[index - nBack]) {
                     _gameState.value = _gameState.value.copy(isMatch = true)
                     Log.d("Check:match", "True")
                 } else {
                     _gameState.value = _gameState.value.copy(isMatch = false)
                     Log.d("Check_match", "False")
-                }
             }
             // Add a delay between events if needed
             delay(eventInterval)
+            playedEvent = false  // Set to false at the beginning of each event
+
         }
     }
-
-
-    var playedEvent: Boolean? = null  // Declare as a property of the class
 
     private suspend fun runVisualGame(events: Array<Int>, nBack: Int) {
         delay(2000)
@@ -195,7 +193,6 @@ class GameVM(
 
         if (playedEvent == false) {
             playedEvent = true
-// Check for null or false explicitly
             if (matchIndex > nBack && match) {
                 _score.value++
                 _gameState.value.buttonColor.value = Color.Green
@@ -248,7 +245,7 @@ enum class GameType{
 data class GameState(
     // You can use this state to push values from the VM to your UI.
     val gameType: GameType = GameType.Visual,  // Type of the game
-    val eventValue: Int = -1,  // The value of the array string
+    val eventValue: Int = 0,  // The value of the array string
     val isMatch: Boolean = false,
     val button: Int = 0,
     val index: MutableState<Int> = mutableStateOf(0),
