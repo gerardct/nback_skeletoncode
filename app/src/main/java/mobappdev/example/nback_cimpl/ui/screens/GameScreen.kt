@@ -58,7 +58,6 @@ fun GameScreen(
     val totalEvents = vm.size.collectAsState().value  // Access size from the ViewModel
     val nBackEvent = gameState.index.value
     val scoreState by vm.score.collectAsState()    // Call the runVisualGame function when the GameScreen is created or based on some trigger
-    val gameFinishedState = remember { mutableStateOf(false) }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) }

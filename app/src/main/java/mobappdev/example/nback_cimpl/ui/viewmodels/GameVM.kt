@@ -45,13 +45,12 @@ interface GameViewModel {
     val nBack: Int
     val size: StateFlow<Int>
 
+
     fun setGameType(gameType: GameType)
     fun startGame()
 
     fun checkMatch()
     fun resetGame()
-    fun setGameFinished(value: Boolean)
-    fun getGameFinished(): Boolean?
 }
 
 
@@ -91,22 +90,12 @@ class GameVM(
     }
     override fun resetGame() {
         // Reset score, game state, or any other necessary values
-        _score.value = 0
         _gameState.value = GameState()
-        job?.cancel()  // Cancel any existing game loop
-    }
-    private var _gameFinished: Boolean? = null
-
-    override fun setGameFinished(value: Boolean) {
-        _gameFinished = value
     }
 
-    override fun getGameFinished(): Boolean? {
-        return _gameFinished
-    }
+
     override fun startGame() {
         job?.cancel()  // Cancel any existing game loop
-        setGameFinished(false) // Set gameFinished using the method
         _score.value = 0
         // Get the events from our C-model (returns IntArray, so we need to convert to Array<Int>)
         events = nBackHelper.generateNBackString(10, 9, 30, nBack).toList()
@@ -175,7 +164,6 @@ class GameVM(
             playedEvent = false  // Set to false at the beginning of each event
         }
         delay(400)
-        setGameFinished(true)
     }
 
     private suspend fun runVisualGame(events: Array<Int>, nBack: Int) {
@@ -202,7 +190,6 @@ class GameVM(
             playedEvent = false  // Set to false at the beginning of each event
         }
         delay(400)
-        setGameFinished(true)
     }
 
     override fun checkMatch() {
@@ -280,6 +267,7 @@ class FakeVM: GameViewModel{
         get() = 2
     override val size: StateFlow<Int>
         get() = MutableStateFlow(0)
+
     override fun setGameType(gameType: GameType) {
     }
 
@@ -289,14 +277,5 @@ class FakeVM: GameViewModel{
     }
 
     override fun resetGame() {
-    }
-    private var _gameFinished: Boolean? = null
-
-    override fun setGameFinished(value: Boolean) {
-        _gameFinished = value
-    }
-
-    override fun getGameFinished(): Boolean? {
-        return _gameFinished
     }
 }
