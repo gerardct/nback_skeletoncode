@@ -46,6 +46,7 @@ import mobappdev.example.nback_cimpl.R
 @Composable
 fun GameScreen(
     vm:GameViewModel, navController: NavController) {
+
     val snackBarHostState = remember { SnackbarHostState() }
     val nback = vm.nBack
     val gameState by vm.gameState.collectAsState()
