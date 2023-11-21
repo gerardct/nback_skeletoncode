@@ -97,6 +97,7 @@ class GameVM(
     override fun startGame() {
         job?.cancel()  // Cancel any existing game loop
         _score.value = 0
+        _gameState.value = _gameState.value.copy(gamefinished = 0)
         // Get the events from our C-model (returns IntArray, so we need to convert to Array<Int>)
         events = nBackHelper.generateNBackString(10, 9, 30, nBack).toList()
             .toTypedArray()  // Todo Higher Grade: currently the size etc. are hardcoded, make these based on user input
@@ -164,6 +165,8 @@ class GameVM(
             playedEvent = false  // Set to false at the beginning of each event
         }
         delay(400)
+        _gameState.value = _gameState.value.copy(gamefinished = 1)
+
     }
 
     private suspend fun runVisualGame(events: Array<Int>, nBack: Int) {
@@ -190,6 +193,8 @@ class GameVM(
             playedEvent = false  // Set to false at the beginning of each event
         }
         delay(400)
+        _gameState.value = _gameState.value.copy(gamefinished = 1)
+
     }
 
     override fun checkMatch() {
@@ -253,7 +258,8 @@ data class GameState(
     val button: Int = 0,
     val index: MutableState<Int> = mutableStateOf(0),
     val size: MutableState<Int> = mutableStateOf(0),
-    val buttonColor: MutableState<Color> = mutableStateOf(Color.Gray)
+    val buttonColor: MutableState<Color> = mutableStateOf(Color.Gray),
+    val gamefinished: Int = 0
 )
 
 class FakeVM: GameViewModel{

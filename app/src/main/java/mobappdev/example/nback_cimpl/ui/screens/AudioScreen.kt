@@ -1,5 +1,6 @@
 package mobappdev.example.nback_cimpl.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,6 +50,7 @@ fun AudioScreen(vm: GameViewModel, navController: NavController){
     val totalEvents = vm.size.collectAsState().value  // Access size from the ViewModel
     val nBackEvent = gameState.index.value
     val scoreState by vm.score.collectAsState()
+    val gamefinished = gameState.gamefinished
 
     Scaffold (
         snackbarHost = { SnackbarHost (snackBarHostState) }
@@ -149,7 +153,44 @@ fun AudioScreen(vm: GameViewModel, navController: NavController){
             }
         }
     }
-}
+    if (gamefinished == 1) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            // Display a square with the obtained score
+            Box(
+                modifier = Modifier
+                    .size(600.dp)
+                    .background(Color.Blue),
+                contentAlignment = Alignment.Center // Center content in the blue box
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Obtained Score: $scoreState",
+                        color = Color.White,
+                        style = TextStyle(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center // Center align the text
+                        )
+                    )
+                    Text(
+                        text = "Press home button to play again",
+                        color = Color.White,
+                        textAlign = TextAlign.Center // Center align the text
+                    )
+                }
+            }
+        }}
+        else {
+        // Other UI elements and game-related components in your GameScreen when the game is ongoing
+    }}
+
 
 @Preview
 @Composable
