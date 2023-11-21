@@ -144,7 +144,9 @@ class GameVM(
         for (index in events.indices) {
             _gameState.value = _gameState.value.copy(eventValue = events[index])
             gameState.value.index.value = index
-
+            _gameState.value = _gameState.value.copy(audioColor = mutableStateOf(Color.Yellow))
+            delay(1500) // Adjust the duration for which the color stays yellow
+            _gameState.value = _gameState.value.copy(audioColor = mutableStateOf(Color.Black))
 
             // Speak the letter associated with the number
             val letter = numberToLetter[events[index]]
@@ -259,7 +261,8 @@ data class GameState(
     val index: MutableState<Int> = mutableStateOf(0),
     val size: MutableState<Int> = mutableStateOf(0),
     val buttonColor: MutableState<Color> = mutableStateOf(Color.Gray),
-    val gamefinished: Int = 0
+    val gamefinished: Int = 0,
+    val audioColor: MutableState<Color> = mutableStateOf(Color.Black)
 )
 
 class FakeVM: GameViewModel{
