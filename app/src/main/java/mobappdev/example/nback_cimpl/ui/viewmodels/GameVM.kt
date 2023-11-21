@@ -145,7 +145,7 @@ class GameVM(
             _gameState.value = _gameState.value.copy(eventValue = events[index])
             gameState.value.index.value = index
             _gameState.value = _gameState.value.copy(audioColor = mutableStateOf(Color.Yellow))
-            delay(1000) // Adjust the duration for which the color stays yellow
+            delay(200) // Adjust the duration for which the color stays yellow
             _gameState.value = _gameState.value.copy(audioColor = mutableStateOf(Color.Black))
 
             // Speak the letter associated with the number
