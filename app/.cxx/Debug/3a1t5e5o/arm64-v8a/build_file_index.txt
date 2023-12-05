@@ -1,0 +1,1 @@
+C:\Users\gcast\Documents\GitHub\nback_skeletoncode\app\src\main\cpp\CMakeLists.txt

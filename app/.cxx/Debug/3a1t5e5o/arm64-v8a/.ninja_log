@@ -1,0 +1,5 @@
+# ninja log v5
+2	827	7221765704042648	CMakeFiles/nback_cimpl.dir/nback.c.o	cc3932d59bf432d1
+14	853	7221765704062843	CMakeFiles/JniBridge.dir/JniBridge.c.o	c2d3a8421f71646c
+831	1028	7221765706103282	C:/Users/gcast/Documents/GitHub/nback_skeletoncode/app/build/intermediates/cxx/Debug/3a1t5e5o/obj/arm64-v8a/libnback_cimpl.so	a42555a40c134526
+1029	1213	7221765707937109	C:/Users/gcast/Documents/GitHub/nback_skeletoncode/app/build/intermediates/cxx/Debug/3a1t5e5o/obj/arm64-v8a/libJniBridge.so	4f7e2bbb97fc4b64
